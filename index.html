@@ -1,801 +1,1353 @@
 <!DOCTYPE html>
-<html lang="ckb">
+<html lang="ckb" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Okey Plus - یاری پۆل</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #1a472a;
-            font-family: 'Segoe UI', 'Tahoma', 'Vazirmatn', system-ui, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow: hidden;
-        }
-        
-        /* مێزە سەرەکیەکە */
-        .game-container {
-            position: relative;
-            width: 1300px;
-            max-width: 95vw;
-            height: 850px;
-            max-height: 90vh;
-            background: radial-gradient(circle at 30% 40%, #2d6a4f, #1b4d2e);
-            border-radius: 180px;
-            box-shadow: 
-                inset 0 0 60px rgba(0,0,0,0.5),
-                0 25px 50px rgba(0,0,0,0.4),
-                0 0 0 12px #c97e3a,
-                0 0 0 20px #9b5e2c;
-            overflow: hidden;
-        }
-        
-        /* پۆزیشنی یاریزانان - چوار لای مێز */
-        .players-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* یاریزانی خوارەوە (یاریزانی ئێستا) */
-        .player-bottom {
-            position: absolute;
-            bottom: 15px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            z-index: 10;
-        }
-        
-        /* یاریزانی سەرەوە */
-        .player-top {
-            position: absolute;
-            top: 15px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            z-index: 10;
-        }
-        
-        /* یاریزانی لای ڕاست */
-        .player-right {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-        }
-        
-        /* یاریزانی لای چەپ */
-        .player-left {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 10;
-        }
-        
-        /* کارتی یاریزان */
-        .player-card {
-            background: rgba(0,0,0,0.3);
-            border-radius: 24px;
-            padding: 12px;
-            backdrop-filter: blur(4px);
-            transition: all 0.2s;
-            min-width: 200px;
-        }
-        
-        .player-bottom .player-card {
-            background: rgba(0,0,0,0.4);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .player-card.active {
-            background: rgba(255,215,0,0.3);
-            box-shadow: 0 0 0 3px #ffd966, 0 0 0 6px rgba(255,215,0,0.3);
-        }
-        
-        .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding: 0 8px;
-        }
-        
-        .player-name {
-            font-weight: bold;
-            color: #ffefc0;
-            background: rgba(0,0,0,0.6);
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 13px;
-        }
-        
-        .points-badge {
-            background: #ffd966;
-            color: #2a5a2a;
-            padding: 3px 12px;
-            border-radius: 25px;
-            font-size: 12px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        
-        .points-badge.can-meld {
-            background: #ffaa33;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        /* تەختەی پۆل - وەک Okey Plus */
-        .tile-rack {
-            background: linear-gradient(145deg, #eeddbb, #dbbc87);
-            border-radius: 20px 20px 35px 35px;
-            padding: 12px 10px 18px 10px;
-            box-shadow: 
-                inset 0 1px 5px rgba(255,255,200,0.8),
-                0 8px 16px rgba(0,0,0,0.3),
-                0 0 0 3px #f5e6c8,
-                0 0 0 6px #b87c3a;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            min-height: 110px;
-            transition: all 0.2s;
-        }
-        
-        .player-bottom .tile-rack {
-            background: linear-gradient(145deg, #f5e6c8, #e6d0a8);
-            box-shadow: 
-                inset 0 1px 5px rgba(255,255,200,0.9),
-                0 8px 20px rgba(0,0,0,0.4),
-                0 0 0 4px #ffefc0,
-                0 0 0 8px #c98a42;
-        }
-        
-        /* شێوازی پۆل */
-        .tile {
-            width: 58px;
-            height: 75px;
-            background: linear-gradient(145deg, #fffcf5, #f5e8da);
-            border-radius: 10px;
-            box-shadow: -2px 2px 5px rgba(0,0,0,0.2), inset 0 1px 0 white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            position: relative;
-            font-family: 'Segoe UI', monospace;
-            will-change: transform;
-        }
-        
-        /* ئەنیمەیشنی هەڵبژاردن و هەڵگرتن */
-        .tile:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.25);
-        }
-        
-        .tile.selected {
-            transform: translateY(-16px) scale(1.03);
-            box-shadow: 0 15px 25px rgba(0,0,0,0.3);
-            filter: brightness(1.05);
-        }
-        
-        /* ئەنیمەیشنی دەرکەوتن */
-        @keyframes tileAppear {
-            from {
-                opacity: 0;
-                transform: scale(0.8) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-        
-        .tile {
-            animation: tileAppear 0.2s ease-out;
-        }
-        
-        .tile::after {
-            content: attr(data-number);
-            position: absolute;
-            bottom: 6px;
-            right: 8px;
-            font-size: 11px;
-            opacity: 0.7;
-            font-weight: normal;
-        }
-        
-        .tile[data-color="ڕەش"] { color: #1e1e2f; border-bottom: 4px solid #1e1e2f; }
-        .tile[data-color="سوور"] { color: #d44; border-bottom: 4px solid #d44; }
-        .tile[data-color="شین"] { color: #48b; border-bottom: 4px solid #48b; }
-        .tile[data-color="زەرد"] { color: #db0; border-bottom: 4px solid #db0; }
-        
-        .tile.joker {
-            background: linear-gradient(145deg, #ffecb3, #ffd966);
-            color: #b87c00;
-        }
-        
-        .tile.joker::after {
-            content: "🃏";
-            font-size: 18px;
-            opacity: 1;
-        }
-        
-        /* پشتی پۆل */
-        .tile.back {
-            background: repeating-linear-gradient(45deg, #b87c4a, #b87c4a 12px, #d69c62 12px, #d69c62 24px);
-            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2);
-            cursor: default;
-        }
-        
-        .tile.back:hover {
-            transform: none;
-        }
-        
-        .tile.back::after {
-            content: "?";
-            opacity: 0.6;
-            color: #f5e6d3;
-            font-size: 16px;
-        }
-        
-        /* ناوچەی دابەزین */
-        .meld-area {
-            background: rgba(0,0,0,0.25);
-            border-radius: 16px;
-            padding: 8px;
-            margin-top: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            min-height: 70px;
-            transition: all 0.2s;
-        }
-        
-        .meld-area .tile {
-            width: 50px;
-            height: 65px;
-            font-size: 18px;
-            opacity: 0.95;
-        }
-        
-        /* ناوەندی مێز */
-        .table-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            gap: 40px;
-            background: rgba(0,0,0,0.2);
-            padding: 20px 35px;
-            border-radius: 100px;
-            backdrop-filter: blur(5px);
-            z-index: 5;
-        }
-        
-        .pile {
-            text-align: center;
-        }
-        
-        .pile .tile {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .pile .tile:hover {
-            transform: translateY(-5px);
-        }
-        
-        .pile-label {
-            font-size: 11px;
-            color: #ffefc0;
-            margin-top: 8px;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
-        }
-        
-        .joker-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            margin-top: -80px;
-            background: rgba(0,0,0,0.7);
-            padding: 5px 15px;
-            border-radius: 40px;
-            font-size: 12px;
-            color: #ffd966;
-            white-space: nowrap;
-            z-index: 6;
-        }
-        
-        /* دوگمەکان */
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            z-index: 20;
-            background: rgba(0,0,0,0.6);
-            padding: 8px 20px;
-            border-radius: 60px;
-            backdrop-filter: blur(8px);
-        }
-        
-        button {
-            background: linear-gradient(180deg, #ffdf9c, #e6b422);
-            border: none;
-            padding: 8px 22px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 40px;
-            color: #2c4a2c;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 3px 0 #b87c00;
-            font-family: inherit;
-        }
-        
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 0 #b87c00;
-        }
-        
-        button:active:not(:disabled) {
-            transform: translateY(2px);
-            box-shadow: 0 1px 0 #b87c00;
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            transform: none;
-            cursor: not-allowed;
-        }
-        
-        .message {
-            position: absolute;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            padding: 6px 18px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 40px;
-            font-size: 12px;
-            color: #ffefb0;
-            white-space: nowrap;
-            z-index: 20;
-            backdrop-filter: blur(4px);
-        }
-        
-        /* وەڵامدانەوە */
-        @media (max-width: 1100px) {
-            .tile { width: 48px; height: 62px; font-size: 20px; }
-            .meld-area .tile { width: 42px; height: 54px; font-size: 16px; }
-            .player-card { min-width: 160px; }
-            .tile-rack { padding: 8px 6px 12px 6px; gap: 4px; }
-            .player-name { font-size: 11px; }
-            .points-badge { font-size: 10px; }
-        }
-        
-        @media (max-width: 900px) {
-            .tile { width: 42px; height: 55px; font-size: 16px; }
-            .player-left, .player-right { transform: translateY(-50%) scale(0.9); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Okey Plus - ئۆکێی پڵەس</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #0a0e1a;
+    --bg-table: #0d1f0d;
+    --table-felt: #1a3a1a;
+    --table-border: #2a5a2a;
+    --gold: #f0c040;
+    --gold-light: #ffe080;
+    --gold-dark: #c09020;
+    --red-tile: #c0392b;
+    --blue-tile: #2980b9;
+    --yellow-tile: #f39c12;
+    --black-tile: #1a1a2e;
+    --white-tile: #ecf0f1;
+    --tile-bg: #fdf6e3;
+    --tile-shadow: rgba(0,0,0,0.5);
+    --panel-bg: rgba(10,14,26,0.92);
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--bg-dark);
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Animated starfield background */
+  .bg-stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(0,100,50,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,50,100,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 80%, rgba(80,40,0,0.1) 0%, transparent 40%),
+      #0a0e1a;
+  }
+  .bg-stars::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 75%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 90%, rgba(255,255,255,0.4) 0%, transparent 100%);
+  }
+
+  /* ===== SCREENS ===== */
+  .screen { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; align-items: center; justify-content: center; }
+  .screen.active { display: flex; }
+
+  /* ===== MENU SCREEN ===== */
+  #menuScreen {
+    background: linear-gradient(135deg, #0a0e1a 0%, #0d1a0d 50%, #0a0e1a 100%);
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: floatLogo 3s ease-in-out infinite;
+  }
+
+  @keyframes floatLogo {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .logo-icon {
+    font-size: 64px;
+    line-height: 1;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 20px var(--gold));
+  }
+
+  .logo-title {
+    font-size: 52px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    text-shadow: none;
+    filter: drop-shadow(0 0 15px rgba(240,192,64,0.5));
+  }
+
+  .logo-sub {
+    font-size: 18px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 5px;
+    letter-spacing: 4px;
+  }
+
+  .menu-tiles-preview {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 40px;
+    animation: slideInTiles 0.8s ease forwards;
+  }
+
+  @keyframes slideInTiles {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .preview-tile {
+    width: 44px; height: 62px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+    transform: rotate(-2deg);
+    transition: transform 0.3s;
+  }
+  .preview-tile:nth-child(2) { transform: rotate(2deg) translateY(-5px); }
+  .preview-tile:nth-child(3) { transform: rotate(-1deg) translateY(3px); }
+  .preview-tile:nth-child(4) { transform: rotate(3deg) translateY(-3px); }
+  .preview-tile.red { background: linear-gradient(145deg, #e74c3c, #c0392b); color: white; }
+  .preview-tile.blue { background: linear-gradient(145deg, #3498db, #2980b9); color: white; }
+  .preview-tile.yellow { background: linear-gradient(145deg, #f1c40f, #f39c12); color: #333; }
+  .preview-tile.black { background: linear-gradient(145deg, #2c3e50, #1a1a2e); color: white; }
+
+  .menu-buttons { display: flex; flex-direction: column; gap: 14px; width: 300px; }
+
+  .btn-menu {
+    padding: 16px 30px;
+    border: none; border-radius: 12px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+
+  .btn-menu::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.1);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .btn-menu:hover::before { opacity: 1; }
+  .btn-menu:hover { transform: translateY(-3px); }
+  .btn-menu:active { transform: translateY(0); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #1a0a00;
+    box-shadow: 0 6px 20px rgba(240,192,64,0.4);
+    font-size: 22px;
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .btn-danger {
+    background: rgba(231,76,60,0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231,76,60,0.3);
+  }
+
+  /* Player count selector */
+  .player-select { display: none; margin-top: 10px; }
+  .player-select.show { display: block; }
+
+  .player-count-label {
+    text-align: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .player-count-btns {
+    display: flex; gap: 10px; justify-content: center;
+  }
+
+  .btn-count {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 22px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-count:hover, .btn-count.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #1a0a00;
+    transform: scale(1.1);
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen {
+    background: var(--bg-dark);
+    padding: 10px;
+  }
+
+  .game-layout {
+    width: 100%; height: 100vh;
+    display: grid;
+    grid-template-rows: 60px 1fr 120px;
+    grid-template-columns: 200px 1fr 200px;
+    gap: 8px;
+  }
+
+  /* Header */
+  .game-header {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .header-logo {
+    font-size: 22px; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-info { display: flex; gap: 20px; align-items: center; }
+
+  .info-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.06);
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 13px; color: rgba(255,255,255,0.7);
+  }
+
+  .info-chip .val { color: var(--gold); font-weight: 700; font-size: 15px; }
+
+  .header-btns { display: flex; gap: 8px; }
+
+  .btn-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .btn-icon:hover { background: rgba(255,255,255,0.12); color: white; }
+
+  /* Left panel - opponent top */
+  .panel-left {
+    display: flex; flex-direction: column; gap: 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 12px;
+  }
+
+  /* Right panel */
+  .panel-right {
+    display: flex; flex-direction: column; gap: 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 12px;
+  }
+
+  /* Table area */
+  .table-area {
+    position: relative;
+    background: radial-gradient(ellipse at center, #1e4d1e, #0d2a0d, #071407);
+    border-radius: 20px;
+    border: 4px solid #2a5a2a;
+    box-shadow:
+      0 0 0 8px #1a3a1a,
+      0 0 0 10px #0d2a0d,
+      0 0 40px rgba(0,100,0,0.3),
+      inset 0 0 60px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Table felt texture */
+  .table-area::before {
+    content: '';
+    position: absolute; inset: 4px;
+    border-radius: 16px;
+    background-image: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+    ), repeating-linear-gradient(
+      90deg, transparent, transparent 2px,
+      rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Center draw/discard piles */
+  .center-piles {
+    display: flex; gap: 30px; align-items: center;
+    z-index: 2;
+  }
+
+  .pile-area { text-align: center; }
+  .pile-label {
+    font-size: 11px; color: rgba(255,255,255,0.4);
+    margin-bottom: 6px; letter-spacing: 1px;
+  }
+
+  .tile-pile {
+    width: 52px; height: 72px;
+    position: relative; cursor: pointer;
+  }
+
+  .tile-back {
+    width: 52px; height: 72px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #1a3a6a, #0d2040);
+    border: 2px solid rgba(100,150,255,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    position: absolute;
+    transition: transform 0.2s;
+  }
+  .tile-back:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
+
+  .tile-back::after {
+    content: '';
+    position: absolute; inset: 4px;
+    border: 1px solid rgba(100,150,255,0.2);
+    border-radius: 4px;
+  }
+
+  /* Stack effect */
+  .pile-stack .tile-back:nth-child(1) { top: 4px; left: 2px; opacity: 0.5; }
+  .pile-stack .tile-back:nth-child(2) { top: 2px; left: 1px; opacity: 0.7; }
+  .pile-stack .tile-back:nth-child(3) { top: 0; left: 0; opacity: 1; }
+
+  .discard-pile .tile-face {
+    width: 52px; height: 72px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #fdf6e3, #f5e6c3);
+    border: 2px solid rgba(0,0,0,0.15);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900;
+  }
+
+  .discard-pile .tile-face.red { color: var(--red-tile); }
+  .discard-pile .tile-face.blue { color: var(--blue-tile); }
+  .discard-pile .tile-face.yellow { color: #c07800; }
+  .discard-pile .tile-face.black { color: #1a1a2e; }
+
+  /* Indicator (okey tile) */
+  .okey-indicator {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    z-index: 2;
+  }
+
+  .okey-label {
+    font-size: 11px; color: var(--gold);
+    letter-spacing: 2px; font-weight: 700;
+  }
+
+  .okey-tile {
+    width: 52px; height: 72px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #fdf6e3, #f5e6c3);
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 20px rgba(240,192,64,0.5), 0 4px 15px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 900;
+    color: var(--red-tile);
+    position: relative;
+    animation: glowOkey 2s ease-in-out infinite;
+  }
+
+  @keyframes glowOkey {
+    0%, 100% { box-shadow: 0 0 20px rgba(240,192,64,0.5), 0 4px 15px rgba(0,0,0,0.5); }
+    50% { box-shadow: 0 0 35px rgba(240,192,64,0.9), 0 4px 20px rgba(0,0,0,0.5); }
+  }
+
+  .okey-tile::after {
+    content: '★';
+    position: absolute;
+    top: -6px; right: -6px;
+    font-size: 14px;
+    color: var(--gold);
+    filter: drop-shadow(0 0 4px var(--gold));
+  }
+
+  /* Opponent tiles (face down) */
+  .opponent-tiles {
+    display: flex; gap: 3px; flex-wrap: wrap; justify-content: center;
+  }
+
+  .opp-tile {
+    width: 24px; height: 34px;
+    border-radius: 4px;
+    background: linear-gradient(145deg, #1a3a6a, #0d2040);
+    border: 1px solid rgba(100,150,255,0.25);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+
+  /* Player section */
+  .player-section {
+    grid-column: 1 / -1;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .player-info-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px;
+  }
+
+  .player-name {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .player-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 10px rgba(240,192,64,0.4);
+  }
+
+  .player-tag {
+    font-size: 15px; font-weight: 700; color: white;
+  }
+
+  .turn-indicator {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 13px; color: var(--accent);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .dot-live {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* Player hand */
+  .player-hand {
+    display: flex; gap: 4px; align-items: flex-end;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .player-hand::-webkit-scrollbar { display: none; }
+
+  .hand-tile {
+    width: 46px; height: 64px;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #fdf6e3, #f5e6c3);
+    border: 2px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    user-select: none;
+    position: relative;
+  }
+
+  .hand-tile:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8);
+    z-index: 5;
+  }
+
+  .hand-tile.selected {
+    transform: translateY(-16px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 25px rgba(0,229,255,0.4), 0 0 0 2px var(--accent);
+  }
+
+  .hand-tile.red { color: var(--red-tile); }
+  .hand-tile.blue { color: var(--blue-tile); }
+  .hand-tile.yellow { color: #c07800; }
+  .hand-tile.black { color: #1a1a2e; }
+
+  /* Joker tile */
+  .hand-tile.joker {
+    background: linear-gradient(145deg, #fff9e6, #ffd700);
+    border-color: var(--gold);
+    color: #c07800;
+    box-shadow: 0 4px 12px rgba(240,192,64,0.4), inset 0 1px 0 rgba(255,255,255,0.9);
+  }
+
+  /* Tile number */
+  .tile-num {
+    font-size: 22px; font-weight: 900;
+    line-height: 1;
+  }
+
+  .tile-corner {
+    position: absolute;
+    top: 3px; left: 5px;
+    font-size: 10px; font-weight: 700;
+    line-height: 1;
+    opacity: 0.7;
+  }
+
+  /* Action buttons */
+  .action-btns {
+    display: flex; gap: 8px; margin-right: 10px;
+  }
+
+  .btn-action {
+    padding: 8px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-draw {
+    background: linear-gradient(135deg, #27ae60, #1e8449);
+    color: white;
+    box-shadow: 0 4px 12px rgba(39,174,96,0.4);
+  }
+
+  .btn-discard {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    box-shadow: 0 4px 12px rgba(231,76,60,0.4);
+  }
+
+  .btn-okey {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #1a0a00;
+    box-shadow: 0 4px 12px rgba(240,192,64,0.5);
+    animation: glowBtn 2s ease-in-out infinite;
+  }
+
+  @keyframes glowBtn {
+    0%, 100% { box-shadow: 0 4px 12px rgba(240,192,64,0.5); }
+    50% { box-shadow: 0 4px 20px rgba(240,192,64,0.8); }
+  }
+
+  .btn-action:hover { transform: translateY(-2px) scale(1.03); }
+  .btn-action:active { transform: translateY(0) scale(0.98); }
+  .btn-action:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Opponent avatars on table */
+  .table-opponent {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    z-index: 3;
+  }
+
+  .table-opponent.top { top: 16px; left: 50%; transform: translateX(-50%); }
+  .table-opponent.left { left: 16px; top: 50%; transform: translateY(-50%); }
+  .table-opponent.right { right: 16px; top: 50%; transform: translateY(-50%); }
+
+  .opp-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2c3e50, #1a252f);
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+
+  .opp-avatar.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(0,229,255,0.5);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .opp-name-tag {
+    font-size: 11px; color: rgba(255,255,255,0.6);
+    background: rgba(0,0,0,0.5);
+    padding: 2px 8px; border-radius: 10px;
+  }
+
+  .opp-tile-count {
+    font-size: 11px; color: var(--gold);
+    font-weight: 700;
+  }
+
+  .opp-mini-tiles {
+    display: flex; gap: 2px;
+  }
+
+  .opp-mini-tile {
+    width: 16px; height: 22px;
+    border-radius: 3px;
+    background: linear-gradient(145deg, #1a3a6a, #0d2040);
+    border: 1px solid rgba(100,150,255,0.2);
+  }
+
+  /* Side opponent rows */
+  .side-opp-tiles {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .side-opp-tiles .opp-mini-tile {
+    width: 22px; height: 16px;
+  }
+
+  /* Score panel */
+  .score-section {
+    padding: 8px;
+  }
+
+  .score-title {
+    font-size: 11px; color: var(--gold); font-weight: 700;
+    letter-spacing: 2px; margin-bottom: 8px; text-align: center;
+  }
+
+  .score-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 8px; border-radius: 6px;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+
+  .score-row.me { background: rgba(240,192,64,0.1); border: 1px solid rgba(240,192,64,0.2); }
+
+  .score-name { color: rgba(255,255,255,0.7); }
+  .score-val { color: var(--gold); font-weight: 700; }
+
+  /* Chat panel */
+  .chat-section {
+    flex: 1; display: flex; flex-direction: column;
+    min-height: 0;
+  }
+
+  .chat-title {
+    font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 700;
+    letter-spacing: 2px; margin-bottom: 8px;
+  }
+
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+    display: flex; flex-direction: column; gap: 4px;
+    min-height: 0;
+    max-height: 120px;
+  }
+
+  .chat-msg {
+    font-size: 12px; padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    line-height: 1.4;
+  }
+
+  .chat-msg .msg-from { color: var(--accent); font-weight: 700; }
+  .chat-msg .msg-text { color: rgba(255,255,255,0.6); }
+
+  .chat-input-row {
+    display: flex; gap: 6px; margin-top: 6px;
+  }
+
+  .chat-input {
+    flex: 1; padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: white; font-family: 'Tajawal', sans-serif; font-size: 13px;
+    outline: none;
+  }
+  .chat-input:focus { border-color: rgba(0,229,255,0.4); }
+
+  .btn-send {
+    padding: 6px 12px;
+    border-radius: 8px; border: none;
+    background: var(--accent); color: #0a0e1a;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-send:hover { background: var(--gold); }
+
+  /* Toast notification */
+  .toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: rgba(10,14,26,0.95);
+    border: 1px solid var(--gold);
+    padding: 12px 24px; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    color: var(--gold);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 20px rgba(240,192,64,0.2);
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Leaderboard overlay */
+  .overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+  }
+  .overlay.show { display: flex; }
+
+  .overlay-panel {
+    background: linear-gradient(135deg, #0d1a2e, #0a0e1a);
+    border: 1px solid rgba(240,192,64,0.3);
+    border-radius: 20px;
+    padding: 30px;
+    width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(240,192,64,0.1);
+  }
+
+  .overlay-title {
+    font-size: 24px; font-weight: 900;
+    text-align: center;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+  }
+
+  .lb-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 10px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .lb-rank { font-size: 20px; width: 30px; text-align: center; }
+  .lb-name { flex: 1; font-size: 15px; font-weight: 700; }
+  .lb-score { color: var(--gold); font-weight: 700; font-size: 16px; }
+
+  .lb-row:first-child { background: rgba(240,192,64,0.1); border-color: rgba(240,192,64,0.3); }
+
+  .btn-close-overlay {
+    width: 100%; margin-top: 16px;
+    padding: 12px; border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: white; font-family: 'Tajawal', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-close-overlay:hover { background: rgba(255,255,255,0.1); }
+
+  /* Win animation */
+  @keyframes winPop {
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    60% { transform: scale(1.1) rotate(3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .win-panel {
+    animation: winPop 0.5s ease forwards;
+  }
+
+  /* Tile group highlight */
+  .hand-tile.group-1 { box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(39,174,96,0.5); }
+  .hand-tile.group-2 { box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(52,152,219,0.5); }
+  .hand-tile.group-3 { box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(155,89,182,0.5); }
+</style>
 </head>
 <body>
-<div class="game-container">
-    <div class="players-wrapper">
-        
-        <!-- یاریزانی سەرەوە -->
-        <div class="player-top" id="playerTop"></div>
-        
-        <!-- یاریزانی لای ڕاست -->
-        <div class="player-right" id="playerRight"></div>
-        
-        <!-- یاریزانی لای چەپ -->
-        <div class="player-left" id="playerLeft"></div>
-        
-        <!-- یاریزانی خوارەوە -->
-        <div class="player-bottom" id="playerBottom"></div>
-        
-        <!-- ناوەندی مێز -->
-        <div class="table-center">
-            <div class="pile">
-                <div class="tile back" id="drawPileTile">?</div>
-                <div class="pile-label">📦 قاچ</div>
-            </div>
-            <div class="pile">
-                <div id="discardTile"></div>
-                <div class="pile-label">🗑️ فڕێدراو</div>
-            </div>
-        </div>
-        
-        <div class="joker-indicator" id="jokerIndicator">🃏 جۆکەر: -</div>
-        
-        <!-- دوگمەکان -->
-        <div class="controls">
-            <button id="drawBtn">🎴 هەڵگرتن</button>
-            <button id="discardBtn" disabled>🗑️ فڕێدان</button>
-            <button id="meldBtn" disabled>✨ دابەزین</button>
-            <button id="resetBtn">🔄 یاری نوێ</button>
-        </div>
-        
-        <div class="message" id="message">👋 کلیک لەسەر پۆلێک بکە بۆ هەڵبژاردن</div>
+
+<div class="bg-stars"></div>
+
+<!-- MENU SCREEN -->
+<div class="screen active" id="menuScreen">
+  <div class="logo-area">
+    <div class="logo-icon">🀄</div>
+    <div class="logo-title">ئۆکێی پڵەس</div>
+    <div class="logo-sub">OKEY PLUS</div>
+  </div>
+
+  <div class="menu-tiles-preview">
+    <div class="preview-tile red">7</div>
+    <div class="preview-tile blue">12</div>
+    <div class="preview-tile yellow">3</div>
+    <div class="preview-tile black">9</div>
+  </div>
+
+  <div class="menu-buttons">
+    <button class="btn-menu btn-primary" onclick="showPlayerSelect()">🎮 یاری نوێ</button>
+
+    <div class="player-select" id="playerSelect">
+      <div class="player-count-label">چەند یاریزان؟</div>
+      <div class="player-count-btns">
+        <button class="btn-count" onclick="startGame(1)">١</button>
+        <button class="btn-count" onclick="startGame(2)">٢</button>
+        <button class="btn-count" onclick="startGame(3)">٣</button>
+        <button class="btn-count active" onclick="startGame(4)">٤</button>
+      </div>
     </div>
+
+    <button class="btn-menu btn-secondary" onclick="showLeaderboard()">🏆 پوانەی بەرزەکان</button>
+    <button class="btn-menu btn-secondary">⚙️ ڕێکخستنەکان</button>
+    <button class="btn-menu btn-danger">🚪 دەرچوون</button>
+  </div>
 </div>
 
+<!-- GAME SCREEN -->
+<div class="screen" id="gameScreen">
+  <div class="game-layout">
+
+    <!-- Header -->
+    <div class="game-header">
+      <div class="header-logo">ئۆکێی پڵەس</div>
+      <div class="header-info">
+        <div class="info-chip">🔄 نۆبەت <span class="val" id="turnNum">١</span></div>
+        <div class="info-chip">⏱️ <span class="val" id="timerVal">٣٠</span></div>
+        <div class="info-chip">🎴 ماوە <span class="val" id="deckCount">٨٤</span></div>
+      </div>
+      <div class="header-btns">
+        <button class="btn-icon" onclick="toggleSound()" id="soundBtn">🔊</button>
+        <button class="btn-icon" onclick="showLeaderboard()">🏆</button>
+        <button class="btn-icon" onclick="goMenu()">🏠</button>
+      </div>
+    </div>
+
+    <!-- Left Panel: Score + Opponent Left -->
+    <div class="panel-left">
+      <div class="score-section">
+        <div class="score-title">⭐ پوانە</div>
+        <div class="score-row me">
+          <span class="score-name">👤 تۆ</span>
+          <span class="score-val" id="myScore">0</span>
+        </div>
+        <div class="score-row" id="scoreP2row">
+          <span class="score-name">🤖 AI ١</span>
+          <span class="score-val" id="scoreP2">0</span>
+        </div>
+        <div class="score-row" id="scoreP3row">
+          <span class="score-name">🤖 AI ٢</span>
+          <span class="score-val" id="scoreP3">0</span>
+        </div>
+        <div class="score-row" id="scoreP4row">
+          <span class="score-name">🤖 AI ٣</span>
+          <span class="score-val" id="scoreP4">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Area -->
+    <div class="table-area" id="tableArea">
+
+      <!-- Top opponent -->
+      <div class="table-opponent top" id="opp1Area">
+        <div class="opp-mini-tiles" id="opp1Tiles"></div>
+        <div class="opp-avatar" id="opp1Avatar">🤖</div>
+        <div class="opp-name-tag">AI ١</div>
+        <div class="opp-tile-count" id="opp1Count">١٤ داڵ</div>
+      </div>
+
+      <!-- Left opponent -->
+      <div class="table-opponent left" id="opp2Area" style="display:none">
+        <div class="side-opp-tiles" id="opp2Tiles"></div>
+        <div class="opp-avatar" id="opp2Avatar">🤖</div>
+        <div class="opp-name-tag">AI ٢</div>
+        <div class="opp-tile-count" id="opp2Count">١٤ داڵ</div>
+      </div>
+
+      <!-- Right opponent -->
+      <div class="table-opponent right" id="opp3Area" style="display:none">
+        <div class="side-opp-tiles" id="opp3Tiles"></div>
+        <div class="opp-avatar" id="opp3Avatar">🤖</div>
+        <div class="opp-name-tag">AI ٣</div>
+        <div class="opp-tile-count" id="opp3Count">١٤ داڵ</div>
+      </div>
+
+      <!-- Center: okey indicator + piles -->
+      <div class="okey-indicator">
+        <div class="okey-label">⭐ ئۆکێی</div>
+        <div class="okey-tile" id="okeyTile"><span id="okeyNum">7</span></div>
+      </div>
+
+      <div class="center-piles">
+        <div class="pile-area">
+          <div class="pile-label">دابەزاندن</div>
+          <div class="tile-pile pile-stack" id="drawPile" onclick="drawTile()">
+            <div class="tile-back">🎴</div>
+            <div class="tile-back">🎴</div>
+            <div class="tile-back">🎴</div>
+          </div>
+        </div>
+
+        <div class="pile-area">
+          <div class="pile-label">دانان</div>
+          <div class="tile-pile discard-pile" id="discardPile" onclick="takeDiscard()">
+            <div class="tile-face red" id="topDiscard">5</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Panel: Chat -->
+    <div class="panel-right">
+      <div class="chat-section">
+        <div class="chat-title">💬 چات</div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg"><span class="msg-from">AI ١:</span> <span class="msg-text">سەرەکی باشت! 🎮</span></div>
+          <div class="chat-msg"><span class="msg-from">سیستەم:</span> <span class="msg-text">یاری دەستپێکرد</span></div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" placeholder="پەیامت بنووسە..." onkeypress="chatKeyPress(event)">
+          <button class="btn-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Section -->
+    <div class="player-section">
+      <div class="player-info-bar">
+        <div class="player-name">
+          <div class="player-avatar">😎</div>
+          <div class="player-tag">تۆ</div>
+        </div>
+        <div class="turn-indicator" id="turnIndicator">
+          <div class="dot-live"></div>
+          <span>نۆبەتی تۆیە</span>
+        </div>
+        <div class="action-btns">
+          <button class="btn-action btn-draw" onclick="drawTile()" id="btnDraw">دابەزاندن</button>
+          <button class="btn-action btn-discard" onclick="discardSelected()" id="btnDiscard" disabled>دانان</button>
+          <button class="btn-action btn-okey" onclick="declareOkey()" id="btnOkey" disabled>🏆 ئۆکێی!</button>
+        </div>
+      </div>
+      <div class="player-hand" id="playerHand"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Leaderboard Overlay -->
+<div class="overlay" id="lbOverlay">
+  <div class="overlay-panel win-panel">
+    <div class="overlay-title">🏆 پوانەی بەرزەکان</div>
+    <div class="lb-row"><span class="lb-rank">🥇</span><span class="lb-name">ڕێبین</span><span class="lb-score">2450</span></div>
+    <div class="lb-row"><span class="lb-rank">🥈</span><span class="lb-name">شیلان</span><span class="lb-score">1890</span></div>
+    <div class="lb-row"><span class="lb-rank">🥉</span><span class="lb-name">کارزان</span><span class="lb-score">1650</span></div>
+    <div class="lb-row"><span class="lb-rank">4️⃣</span><span class="lb-name">دیلنیا</span><span class="lb-score">1420</span></div>
+    <div class="lb-row"><span class="lb-rank">5️⃣</span><span class="lb-name">هاوژین</span><span class="lb-score">1200</span></div>
+    <button class="btn-close-overlay" onclick="closeLb()">داخستن</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
-    // ==================== کلاس ====================
-    class Tile {
-        constructor(color, number, isJoker = false) {
-            this.color = color;
-            this.number = number;
-            this.isJoker = isJoker;
-        }
-        
-        getPoints() {
-            if (this.isJoker) return 25;
-            if ([1, 10, 11, 12, 13].includes(this.number)) return 10;
-            return this.number;
-        }
-        
-        getShortName() {
-            if (this.isJoker) return "🃏";
-            return `${this.number}`;
-        }
-        
-        clone() {
-            return new Tile(this.color, this.number, this.isJoker);
-        }
+// ===== GAME STATE =====
+let gameState = {
+  players: 4,
+  myHand: [],
+  selectedTile: -1,
+  deck: [],
+  discard: [],
+  okeyTile: null,
+  turn: 0, // 0 = player
+  myTurn: true,
+  drawnThisTurn: false,
+  scores: [0, 0, 0, 0],
+  turnNum: 1,
+  timer: 30,
+  timerInterval: null,
+  soundOn: true,
+  opponents: [
+    { tiles: 14 },
+    { tiles: 14 },
+    { tiles: 14 }
+  ]
+};
+
+const COLORS = ['red', 'blue', 'yellow', 'black'];
+const COLOR_NAMES = { red: 'ئەحمەر', blue: 'شین', yellow: 'زەرد', black: 'ڕەش' };
+
+// ===== INITIALIZE =====
+function initDeck() {
+  let deck = [];
+  COLORS.forEach(color => {
+    for (let n = 1; n <= 13; n++) {
+      deck.push({ num: n, color });
+      deck.push({ num: n, color }); // two sets
     }
-    
-    // ==================== یاری ====================
-    class Game {
-        constructor() {
-            this.colors = ["ڕەش", "سوور", "شین", "زەرد"];
-            this.tiles = [];
-            this.players = [[], [], [], []];
-            this.melds = [[], [], [], []];
-            this.discardPile = [];
-            this.openTile = null;
-            this.jokerTile = null;
-            this.currentPlayer = 0;
-            this.gamePhase = "draw";
-            this.selectedTileIndex = -1;
-            this.winner = -1;
-            this.hasDrawn = false;
-            this.hasMeldThisTurn = false;
-        }
-        
-        createAllTiles() {
-            this.tiles = [];
-            for (let color of this.colors) {
-                for (let num = 1; num <= 13; num++) {
-                    for (let i = 0; i < 2; i++) {
-                        this.tiles.push(new Tile(color, num, false));
-                    }
-                }
-            }
-            for (let i = 0; i < 2; i++) {
-                this.tiles.push(new Tile(null, null, true));
-            }
-        }
-        
-        shuffle() {
-            for (let i = this.tiles.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [this.tiles[i], this.tiles[j]] = [this.tiles[j], this.tiles[i]];
-            }
-        }
-        
-        deal() {
-            this.players = [[], [], [], []];
-            for (let i = 0; i < 4; i++) {
-                let count = i === 0 ? 15 : 14;
-                for (let j = 0; j < count; j++) {
-                    this.players[i].push(this.tiles.pop());
-                }
-            }
-            this.openTile = this.tiles.pop();
-            this.setJokerFromOpenTile();
-        }
-        
-        setJokerFromOpenTile() {
-            if (this.openTile.isJoker) {
-                this.jokerTile = new Tile(null, null, true);
-            } else {
-                let newNumber = this.openTile.number - 1;
-                if (newNumber === 0) newNumber = 13;
-                this.jokerTile = new Tile(this.openTile.color, newNumber, false);
-            }
-        }
-        
-        getHandPoints(playerIndex) {
-            let total = 0;
-            for (let tile of this.players[playerIndex]) {
-                total += tile.getPoints();
-            }
-            return total;
-        }
-        
-        canMeld(playerIndex) {
-            return this.getHandPoints(playerIndex) >= 81;
-        }
-        
-        performMeld(playerIndex) {
-            if (this.canMeld(playerIndex) && !this.hasMeldThisTurn) {
-                this.melds[playerIndex].push(...this.players[playerIndex]);
-                this.players[playerIndex] = [];
-                this.hasMeldThisTurn = true;
-                return true;
-            }
-            return false;
-        }
-        
-        drawFromPile() {
-            if (this.gamePhase !== "draw") return false;
-            if (this.tiles.length === 0) return false;
-            let tile = this.tiles.pop();
-            this.players[this.currentPlayer].push(tile);
-            this.hasDrawn = true;
-            this.gamePhase = "discard";
-            return true;
-        }
-        
-        drawFromDiscard() {
-            if (this.gamePhase !== "draw") return false;
-            if (this.discardPile.length === 0) return false;
-            let tile = this.discardPile.pop();
-            this.players[this.currentPlayer].push(tile);
-            this.hasDrawn = true;
-            this.gamePhase = "discard";
-            return true;
-        }
-        
-        discardTile(index) {
-            if (this.gamePhase !== "discard") return false;
-            if (index < 0 || index >= this.players[this.currentPlayer].length) return false;
-            
-            let tile = this.players[this.currentPlayer].splice(index, 1)[0];
-            this.discardPile.push(tile);
-            
-            if (this.players[this.currentPlayer].length === 0) {
-                this.winner = this.currentPlayer;
-                return true;
-            }
-            
-            this.currentPlayer = (this.currentPlayer + 1) % 4;
-            this.gamePhase = "draw";
-            this.hasDrawn = false;
-            this.hasMeldThisTurn = false;
-            this.selectedTileIndex = -1;
-            return true;
-        }
-        
-        reset() {
-            this.createAllTiles();
-            this.shuffle();
-            this.deal();
-            this.discardPile = [];
-            this.melds = [[], [], [], []];
-            this.currentPlayer = 0;
-            this.gamePhase = "draw";
-            this.winner = -1;
-            this.hasDrawn = false;
-            this.hasMeldThisTurn = false;
-            this.selectedTileIndex = -1;
-        }
+  });
+  // 2 fake jokers (okey tiles)
+  deck.push({ num: 0, color: 'joker' });
+  deck.push({ num: 0, color: 'joker' });
+  return shuffle(deck);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startGame(players) {
+  gameState.players = players;
+  gameState.deck = initDeck();
+  gameState.myHand = [];
+  gameState.discard = [];
+  gameState.selectedTile = -1;
+  gameState.drawnThisTurn = false;
+  gameState.turn = 0;
+  gameState.myTurn = true;
+  gameState.turnNum = 1;
+  gameState.scores = [0, 0, 0, 0];
+
+  // Set okey tile
+  const indicator = gameState.deck.pop();
+  gameState.okeyTile = { num: (indicator.num % 13) + 1, color: indicator.color };
+
+  // Deal 14 tiles to player
+  for (let i = 0; i < 14; i++) {
+    gameState.myHand.push(gameState.deck.pop());
+  }
+
+  // Deal to opponents
+  for (let o = 0; o < players - 1; o++) {
+    gameState.opponents[o] = { tiles: 14 };
+    for (let i = 0; i < 14; i++) gameState.deck.pop();
+  }
+
+  // First discard
+  gameState.discard.push(gameState.deck.pop());
+
+  // Switch to game screen
+  document.getElementById('menuScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+
+  updateUI();
+  startTimer();
+  showToast('یاری دەستپێکرا! 🎮');
+
+  // Show/hide opponents based on player count
+  document.getElementById('opp1Area').style.display = players >= 2 ? 'flex' : 'none';
+  document.getElementById('opp2Area').style.display = players >= 3 ? 'flex' : 'none';
+  document.getElementById('opp3Area').style.display = players >= 4 ? 'flex' : 'none';
+  document.getElementById('scoreP3row').style.display = players >= 3 ? 'flex' : 'none';
+  document.getElementById('scoreP4row').style.display = players >= 4 ? 'flex' : 'none';
+}
+
+// ===== UI UPDATE =====
+function updateUI() {
+  renderHand();
+  renderDiscard();
+  renderOkey();
+  updateDeckCount();
+  renderOpponents();
+  updateTurnUI();
+  updateScores();
+}
+
+function renderHand() {
+  const hand = document.getElementById('playerHand');
+  hand.innerHTML = '';
+  gameState.myHand.forEach((tile, i) => {
+    const div = document.createElement('div');
+    div.className = `hand-tile ${tile.color === 'joker' ? 'joker' : tile.color}${i === gameState.selectedTile ? ' selected' : ''}`;
+    if (tile.color === 'joker') {
+      div.innerHTML = `<span class="tile-num">🃏</span>`;
+    } else {
+      div.innerHTML = `<span class="tile-corner">${toArabicNum(tile.num)}</span><span class="tile-num">${toArabicNum(tile.num)}</span>`;
     }
-    
-    // ==================== UI ====================
-    let game = new Game();
-    
-    function renderTile(tile, index, isSelected = false, isBack = false) {
-        if (isBack) {
-            return `<div class="tile back" data-index="${index}" data-isback="true">?</div>`;
-        }
-        if (!tile) return '';
-        let colorClass = tile.isJoker ? "joker" : "";
-        let colorAttr = tile.color || "";
-        let selectedClass = isSelected ? "selected" : "";
-        let numberAttr = tile.isJoker ? "" : (tile.number || "");
-        return `<div class="tile ${colorClass} ${selectedClass}" data-color="${colorAttr}" data-index="${index}" data-number="${numberAttr}">
-                    ${tile.getShortName()}
-                </div>`;
+    div.onclick = () => selectTile(i);
+    hand.appendChild(div);
+  });
+}
+
+function renderDiscard() {
+  const top = gameState.discard[gameState.discard.length - 1];
+  if (!top) return;
+  const el = document.getElementById('topDiscard');
+  el.className = `tile-face ${top.color === 'joker' ? 'red' : top.color}`;
+  el.textContent = top.color === 'joker' ? '🃏' : toArabicNum(top.num);
+}
+
+function renderOkey() {
+  if (!gameState.okeyTile) return;
+  const el = document.getElementById('okeyNum');
+  el.textContent = toArabicNum(gameState.okeyTile.num);
+  document.getElementById('okeyTile').style.color =
+    gameState.okeyTile.color === 'red' ? '#c0392b' :
+    gameState.okeyTile.color === 'blue' ? '#2980b9' :
+    gameState.okeyTile.color === 'yellow' ? '#c07800' : '#1a1a2e';
+}
+
+function renderOpponents() {
+  for (let o = 0; o < gameState.players - 1; o++) {
+    const count = gameState.opponents[o]?.tiles || 0;
+    const tilesEl = document.getElementById(`opp${o+1}Tiles`);
+    const countEl = document.getElementById(`opp${o+1}Count`);
+    if (!tilesEl) continue;
+    tilesEl.innerHTML = '';
+    for (let i = 0; i < Math.min(count, 7); i++) {
+      const t = document.createElement('div');
+      t.className = 'opp-mini-tile';
+      tilesEl.appendChild(t);
     }
-    
-    function render() {
-        // جۆکەر
-        let jokerText = game.jokerTile ? 
-            (game.jokerTile.isJoker ? "🃏 جۆکەر" : `${game.jokerTile.color} ${game.jokerTile.number}`) : "-";
-        document.getElementById("jokerIndicator").innerHTML = `🃏 جۆکەر: ${jokerText}`;
-        
-        // قاچ
-        let drawDiv = document.getElementById("drawPileTile");
-        if (drawDiv) {
-            drawDiv.innerHTML = game.tiles.length > 0 ? "?" : "🔒";
-            drawDiv.className = `tile back ${game.tiles.length === 0 ? "disabled" : ""}`;
-        }
-        
-        // فڕێدراو
-        let discardDiv = document.getElementById("discardTile");
-        if (discardDiv && game.discardPile.length > 0) {
-            let lastTile = game.discardPile[game.discardPile.length - 1];
-            discardDiv.innerHTML = renderTile(lastTile, 0, false, false);
-        } else if (discardDiv) {
-            discardDiv.innerHTML = '<div class="tile back" style="opacity:0.5;">-</div>';
-        }
-        
-        // پۆزیشنی یاریزانان: [0]خوارەوە, [1]ڕاست, [2]سەرەوە, [3]چەپ
-        const positions = ["playerBottom", "playerRight", "playerTop", "playerLeft"];
-        const playerNames = ["یاریزان ١", "یاریزان ٢", "یاریزان ٣", "یاریزان ٤"];
-        
-        for (let i = 0; i < 4; i++) {
-            let container = document.getElementById(positions[i]);
-            if (!container) continue;
-            
-            let isCurrent = (i === game.currentPlayer);
-            let hand = game.players[i];
-            let meld = game.melds[i];
-            let points = game.getHandPoints(i);
-            let canMeld = game.canMeld(i);
-            
-            // تەختەی پۆل
-            let handHtml = '';
-            if (isCurrent) {
-                for (let j = 0; j < hand.length; j++) {
-                    handHtml += renderTile(hand[j], j, j === game.selectedTileIndex, false);
-                }
-            } else {
-                for (let j = 0; j < hand.length; j++) {
-                    handHtml += renderTile(null, j, false, true);
-                }
-            }
-            
-            // ناوچەی دابەزین
-            let meldHtml = '';
-            if (meld.length > 0) {
-                for (let j = 0; j < meld.length; j++) {
-                    meldHtml += renderTile(meld[j], j, false, false);
-                }
-            } else {
-                meldHtml = '<span style="opacity:0.5; font-size:11px;">- دابەزین نییە -</span>';
-            }
-            
-            let pointsClass = canMeld ? "points-badge can-meld" : "points-badge";
-            let pointsText = canMeld ? `✨ ${points} خاڵ` : `${points} خاڵ`;
-            
-            container.innerHTML = `
-                <div class="player-card ${isCurrent ? 'active' : ''}">
-                    <div class="player-header">
-                        <span class="player-name">👤 ${playerNames[i]}</span>
-                        <span class="${pointsClass}">${pointsText}</span>
-                    </div>
-                    <div class="tile-rack">
-                        ${handHtml || '<span style="opacity:0.5; font-size:12px;">- بەتاڵ -</span>'}
-                    </div>
-                    <div class="meld-area">
-                        ${meldHtml}
-                    </div>
-                </div>
-            `;
-        }
-        
-        // دوگمەکان
-        document.getElementById("drawBtn").disabled = game.gamePhase !== "draw" || game.winner !== -1;
-        document.getElementById("discardBtn").disabled = game.gamePhase !== "discard" || game.selectedTileIndex === -1 || game.winner !== -1;
-        document.getElementById("meldBtn").disabled = game.gamePhase !== "discard" || !game.canMeld(game.currentPlayer) || game.hasMeldThisTurn || game.winner !== -1;
-        
-        let msgDiv = document.getElementById("message");
-        if (game.winner !== -1) {
-            msgDiv.innerHTML = `🎉 براوە! یاریزان ${game.winner+1} سەرکەوت! 🎉`;
-            msgDiv.style.background = "#4caf50";
-        } else {
-            msgDiv.style.background = "rgba(0,0,0,0.7)";
-            if (game.gamePhase === "draw") {
-                msgDiv.innerHTML = "🎴 کلیک لە 'هەڵگرتن' یان کلیک لە پۆلی فڕێدراو بکە";
-            } else {
-                msgDiv.innerHTML = "🗑️ پۆلێک هەڵبژێرە و کلیک لە 'فڕێدان' بکە | ✨ ئەگەر خاڵت ≥ ٨١ بێت دەتوانیت دابەزیت";
-            }
-        }
+    if (countEl) countEl.textContent = `${toArabicNum(count)} داڵ`;
+  }
+}
+
+function updateTurnUI() {
+  const indicator = document.getElementById('turnIndicator');
+  const btnDraw = document.getElementById('btnDraw');
+  const btnDiscard = document.getElementById('btnDiscard');
+
+  if (gameState.myTurn) {
+    indicator.style.display = 'flex';
+    btnDraw.disabled = gameState.drawnThisTurn;
+    btnDiscard.disabled = !gameState.drawnThisTurn || gameState.selectedTile === -1;
+  } else {
+    indicator.style.display = 'none';
+    btnDraw.disabled = true;
+    btnDiscard.disabled = true;
+  }
+  document.getElementById('turnNum').textContent = toArabicNum(gameState.turnNum);
+}
+
+function updateDeckCount() {
+  document.getElementById('deckCount').textContent = toArabicNum(gameState.deck.length);
+}
+
+function updateScores() {
+  document.getElementById('myScore').textContent = toArabicNum(gameState.scores[0]);
+  document.getElementById('scoreP2').textContent = toArabicNum(gameState.scores[1]);
+  document.getElementById('scoreP3').textContent = toArabicNum(gameState.scores[2]);
+  document.getElementById('scoreP4').textContent = toArabicNum(gameState.scores[3]);
+}
+
+// ===== ACTIONS =====
+function selectTile(i) {
+  if (!gameState.myTurn) return;
+  if (gameState.selectedTile === i) {
+    gameState.selectedTile = -1;
+  } else {
+    gameState.selectedTile = i;
+  }
+  renderHand();
+  document.getElementById('btnDiscard').disabled = !gameState.drawnThisTurn || gameState.selectedTile === -1;
+}
+
+function drawTile() {
+  if (!gameState.myTurn || gameState.drawnThisTurn) return;
+  if (gameState.deck.length === 0) { showToast('داڵ تەموو بوو!'); return; }
+  const tile = gameState.deck.pop();
+  gameState.myHand.push(tile);
+  gameState.drawnThisTurn = true;
+  updateUI();
+  showToast('داڵ دابەزاند ✅');
+}
+
+function takeDiscard() {
+  if (!gameState.myTurn || gameState.drawnThisTurn || gameState.discard.length === 0) return;
+  const tile = gameState.discard.pop();
+  gameState.myHand.push(tile);
+  gameState.drawnThisTurn = true;
+  updateUI();
+  showToast('داڵی دانراو گرتەوە ♻️');
+}
+
+function discardSelected() {
+  if (!gameState.myTurn || !gameState.drawnThisTurn || gameState.selectedTile === -1) return;
+  const tile = gameState.myHand.splice(gameState.selectedTile, 1)[0];
+  gameState.discard.push(tile);
+  gameState.selectedTile = -1;
+  gameState.drawnThisTurn = false;
+  gameState.myTurn = false;
+  clearInterval(gameState.timerInterval);
+  updateUI();
+  showToast('داڵ دانرا 🃏');
+  setTimeout(aiTurn, 1200);
+}
+
+function declareOkey() {
+  if (!gameState.myTurn) return;
+  showToast('🏆 بردیت! ئۆکێی!');
+  gameState.scores[0] += 50;
+  updateScores();
+  setTimeout(() => {
+    if (confirm('دووبارە یاری بکەیت؟')) startGame(gameState.players);
+    else goMenu();
+  }, 1500);
+}
+
+// ===== AI TURN =====
+function aiTurn() {
+  for (let o = 0; o < gameState.players - 1; o++) {
+    // highlight active opponent
+    const avatar = document.getElementById(`opp${o+1}Avatar`);
+    if (avatar) avatar.classList.add('active');
+  }
+
+  setTimeout(() => {
+    for (let o = 0; o < gameState.players - 1; o++) {
+      const avatar = document.getElementById(`opp${o+1}Avatar`);
+      if (avatar) avatar.classList.remove('active');
     }
-    
-    // ==================== Event Listeners ====================
-    function handleTileClick(e) {
-        let target = e.target.closest(".tile");
-        if (!target) return;
-        
-        let isBack = target.dataset.isback === "true";
-        if (isBack) return;
-        
-        let index = parseInt(target.dataset.index);
-        if (isNaN(index)) return;
-        
-        if (game.gamePhase === "discard" && game.selectedTileIndex === -1) {
-            game.selectedTileIndex = index;
-            render();
-        } else if (game.gamePhase === "discard" && game.selectedTileIndex !== -1) {
-            game.selectedTileIndex = -1;
-            render();
+
+    // AI draws and discards
+    if (gameState.deck.length > 0) gameState.deck.pop();
+
+    const aiMessages = ['باش بووم 😏', 'هممم... 🤔', 'بە هیوام! 🙏', 'باشە باشە'];
+    addChat('AI ١', aiMessages[Math.floor(Math.random() * aiMessages.length)]);
+
+    gameState.myTurn = true;
+    gameState.drawnThisTurn = false;
+    gameState.turnNum++;
+    startTimer();
+    updateUI();
+    showToast('نۆبەتی تۆیە! 🎯');
+  }, 1000);
+}
+
+// ===== TIMER =====
+function startTimer() {
+  gameState.timer = 30;
+  document.getElementById('timerVal').textContent = toArabicNum(30);
+  clearInterval(gameState.timerInterval);
+  gameState.timerInterval = setInterval(() => {
+    gameState.timer--;
+    document.getElementById('timerVal').textContent = toArabicNum(gameState.timer);
+    if (gameState.timer <= 0) {
+      clearInterval(gameState.timerInterval);
+      if (gameState.myTurn) {
+        if (!gameState.drawnThisTurn) drawTile();
+        else {
+          gameState.selectedTile = 0;
+          discardSelected();
         }
+      }
     }
-    
-    function handleDiscardPileClick() {
-        if (game.gamePhase === "draw" && game.winner === -1) {
-            game.drawFromDiscard();
-            render();
-        }
-    }
-    
-    function handleDrawPileClick() {
-        if (game.gamePhase === "draw" && game.winner === -1) {
-            game.drawFromPile();
-            render();
-        }
-    }
-    
-    document.getElementById("drawBtn").onclick = () => {
-        if (game.gamePhase === "draw" && game.winner === -1) {
-            game.drawFromPile();
-            render();
-        }
-    };
-    
-    document.getElementById("discardBtn").onclick = () => {
-        if (game.gamePhase === "discard" && game.selectedTileIndex !== -1 && game.winner === -1) {
-            game.discardTile(game.selectedTileIndex);
-            render();
-        }
-    };
-    
-    document.getElementById("meldBtn").onclick = () => {
-        if (game.gamePhase === "discard" && game.canMeld(game.currentPlayer) && !game.hasMeldThisTurn && game.winner === -1) {
-            game.performMeld(game.currentPlayer);
-            render();
-        }
-    };
-    
-    document.getElementById("resetBtn").onclick = () => {
-        game.reset();
-        render();
-    };
-    
-    document.getElementById("discardTile")?.addEventListener("click", handleDiscardPileClick);
-    document.getElementById("drawPileTile")?.addEventListener("click", handleDrawPileClick);
-    document.querySelector(".players-wrapper")?.addEventListener("click", handleTileClick);
-    
-    // دەستپێکردن
-    game.reset();
-    render();
+  }, 1000);
+}
+
+// ===== CHAT =====
+function addChat(from, text) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.innerHTML = `<span class="msg-from">${from}:</span> <span class="msg-text">${text}</span>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addChat('تۆ', text);
+  input.value = '';
+
+  // AI response
+  const responses = ['هاها 😄', 'باشە!', 'سەرنج ڕاکێشت 👀', 'بە هیوام ببری!', '🎮'];
+  setTimeout(() => {
+    addChat('AI ١', responses[Math.floor(Math.random() * responses.length)]);
+  }, 800);
+}
+
+function chatKeyPress(e) {
+  if (e.key === 'Enter') sendChat();
+}
+
+// ===== UTILS =====
+function toArabicNum(n) {
+  const arabic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  return String(n).split('').map(d => arabic[d] || d).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function showPlayerSelect() {
+  document.getElementById('playerSelect').classList.toggle('show');
+}
+
+function showLeaderboard() {
+  document.getElementById('lbOverlay').classList.add('show');
+}
+
+function closeLb() {
+  document.getElementById('lbOverlay').classList.remove('show');
+}
+
+function goMenu() {
+  clearInterval(gameState.timerInterval);
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('menuScreen').classList.add('active');
+  document.getElementById('playerSelect').classList.remove('show');
+}
+
+function toggleSound() {
+  gameState.soundOn = !gameState.soundOn;
+  document.getElementById('soundBtn').textContent = gameState.soundOn ? '🔊' : '🔇';
+  showToast(gameState.soundOn ? 'دەنگ کراوەتەوە 🔊' : 'دەنگ داخرا 🔇');
+}
 </script>
 </body>
 </html>
